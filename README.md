@@ -1,4 +1,4 @@
-# make NAQ from SQuAD 
+# create NAQ from SQuAD 
 
 ### Packeges used:
 - tqdm 
