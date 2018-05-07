@@ -22,8 +22,8 @@ python create_NAQdataset.py
 The created files will be saved in save directory.
 
 
-
-If you want to split 3 difficulty levels, 
+### Assign difficulty levels
+To devie the created dataset into three difficulty levels
 ```
 python split_levels.py
 ```
