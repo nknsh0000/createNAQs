@@ -21,7 +21,7 @@ def isanswer(answers, context):
 
 def return_filename(pathname):
 	names = pathname.split('/')[-1]
-	name = names.rstrip('.json')
+	name = names.rsplit('.')[0]
 	return name
 
 def save(data, savedir, name):
@@ -29,12 +29,12 @@ def save(data, savedir, name):
 		os.mkdir(savedir)
 	with open(os.path.join(savedir, name), 'w') as f:
 		json.dump(data, f)
-		print('Save {}'.format(os.path.join(savedir, name	)))
+		print('Save {}'.format(os.path.join(savedir, name	))) 
 
 def makeNAQs(squad):
 	version = squad['version']
 	data = squad['data']
-
+	
 	bar = tqdm.tqdm(total=len(data))
 	naq_data = []
 	for d in data:
@@ -53,17 +53,15 @@ def makeNAQs(squad):
 			for qa in qas:
 				answers = qa['answers']
 				id = qa['id']
-				# NAQ id is "_"+original id
-				nid = '_'+id
 				question = qa['question']
 				if not isanswer(answers, context):
-					naq = {'answers':[], 'id':nid, 'question':question}
+					naq = copy.deepcopy(qa)
 					naqs.append(naq)
 
 			if len(naqs) > 0:
 				naq_paragraphs.append({'qas':naqs, 'context':context})
 		if len(naq_paragraphs) > 0:
-			naq_data.append({'paragraphs':naq_paragraphs, 'title':title})
+			naq_data.append({'paragraphs':naq, 'title':title})
 		bar.update(1)
 
 	naqs = {'data':naq_data, 'version':version}
@@ -72,36 +70,31 @@ def makeNAQs(squad):
 
 
 def main():
-	if len(sys.argv) == 1:
+	if len(sys.argv) == 1: 
 		datadir = 'data'
-		if not os.path.exists(datadir):
-			os.mkdir(datadir)
 	else:
 		datadir = sys.argv[1]
 	savedir = 'save'
 
-	datanamecands = ['train', 'dev']
-	datanames = glob.glob(os.path.join(datadir, 'train-v1.1.json')) + glob.glob(os.path.join(datadir, 'dev-v1.1.json'))
 
+	datanames = glob.glob(os.path.join(datadir, '*.json'))
 	if len(datanames) == 0:
 		print('There is no SQuAD dataset in {}'.format(datadir))
 		print('Will you download it? [Y/n]')
 		res = input()
 		if res.lower() == 'y':
 			dl.download(datadir)
-			datanames = glob.glob(os.path.join(datadir, 'train-v1.1.json')) + glob.glob(os.path.join(datadir, 'dev-v1.1.json'))
+			datanames = glob.glob(os.path.join(datadir, '*.json'))
 		elif res.lower() == 'n':
 			print('Quit.')
 			exit()
 		else:
 			print('Please input [Y/n]')
 
-
 	for dataname in datanames:
-		print(dataname)
 		squad = readdata(dataname)
 		NAQs = makeNAQs(squad)
-		save(NAQs, savedir, 'NAQs_'+return_filename(dataname[0])+'.json')
+		save(NAQs, savedir, 'NAQs_'+return_filename(dataname)+'.json')
 
 	print('Done.')
 
